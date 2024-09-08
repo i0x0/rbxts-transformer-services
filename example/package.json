@@ -1,0 +1,23 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rbxtsc",
+    "watch": "rbxtsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rbxts/compiler-types": "2.3.0-types.2",
+    "@rbxts/types": "^1.0.805",
+    "rbxts-transformer-services": "file:..",
+    "roblox-ts": "^2.3.0",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@rbxts/services": "^1.5.5"
+  }
+}

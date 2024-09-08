@@ -1,13 +1,23 @@
 import ts from "typescript";
-import { TransformContext, TransformerConfig } from "./transformer";
+import {
+  defaultConfig,
+  TransformContext,
+  TransformerConfig,
+} from "./transformer";
 
-/**
- * The transformer entry point.
- * This provides access to necessary resources and the user specified configuration.
- */
-export default function (program: ts.Program, config: TransformerConfig) {
-	return (transformationContext: ts.TransformationContext): ((file: ts.SourceFile) => ts.Node) => {
-		const context = new TransformContext(program, transformationContext, config);
-		return (file) => context.transform(file);
-	};
+export default function (
+  program: ts.Program,
+  config?: Partial<TransformerConfig>
+): ts.TransformerFactory<ts.SourceFile> {
+  return (context: ts.TransformationContext) => {
+    const cont = new TransformContext(context, { ...defaultConfig, ...config });
+    return (file: ts.SourceFile) => {
+      console.log("file");
+      const visitor = (node: ts.Node) => {
+        console.log(node.kind, `\t# ts.SyntaxKind.${ts.SyntaxKind[node.kind]}`);
+        return ts.visitEachChild(node, visitor, context);
+      };
+      return ts.visitNode(file, visitor) as ts.SourceFile;
+    };
+  };
 }
