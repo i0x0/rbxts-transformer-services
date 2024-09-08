@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts, { NodeArray } from "typescript";
 
 /**
  * This is the transformer's configuration, the values are passed from the tsconfig.
@@ -35,6 +35,32 @@ export class TransformContext {
       node,
       (nextnode) => visitNode(this, nextnode),
       this.context
+    );
+  }
+
+  private transformStatementList(
+		statements: NodeArray<ts.Statement>,
+	) {
+		const result: ts.Statement[] = [];
+
+		statements.forEach((statement) => {
+			const newNode = visitNode(this, statement) as ts.Statement;
+      result.push(newNode);
+		});
+
+		return result;
+	}
+
+  tramsformFile(file: ts.SourceFile) {
+    const newStatements =  this.transformStatementList(file.statements);
+
+    return this.factory.updateSourceFile(file, 
+      newStatements, 
+      file.isDeclarationFile, 
+      file.referencedFiles, 
+      file.typeReferenceDirectives, 
+      file.hasNoDefaultLib, 
+      file.libReferenceDirectives
     );
   }
 }
@@ -123,14 +149,18 @@ function visitStatement(
   return context.transform(node);
 }
 
-function visitExpression(
+function visitCallExpression(
   context: TransformContext,
-  node: ts.Expression
-): ts.Expression | ts.Expression[] {
-  // This can be used to transform expressions
-  // For example, a call expression for macros.
+  node: ts.CallExpression
+) {
+  const identifier = node.expression;
+  if (!ts.isIdentifier(identifier)) return context.transform(node);
+  if (identifier.escapedText !== "$myMacro") return context.transform(node);
 
-  return context.transform(node);
+  const argument = node.arguments[0];
+  if (!argument) return;
+
+  return argument;
 }
 
 function visitNode(
@@ -140,8 +170,8 @@ function visitNode(
   console.log(node.kind, `\t# ts.SyntaxKind.${ts.SyntaxKind[node.kind]}`);
   if (ts.isStatement(node)) {
     return visitStatement(context, node);
-  } else if (ts.isExpression(node)) {
-    return visitExpression(context, node);
+  } else if (ts.isCallExpression(node)) {
+    return visitCallExpression(context, node);
   }
 
   // We encountered a node that we don't handle above,

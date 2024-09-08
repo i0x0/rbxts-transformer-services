@@ -12,12 +12,7 @@ export default function (
   return (context: ts.TransformationContext) => {
     const cont = new TransformContext(context, { ...defaultConfig, ...config });
     return (file: ts.SourceFile) => {
-      console.log("file");
-      const visitor = (node: ts.Node) => {
-        console.log(node.kind, `\t# ts.SyntaxKind.${ts.SyntaxKind[node.kind]}`);
-        return ts.visitEachChild(node, visitor, context);
-      };
-      return ts.visitNode(file, visitor) as ts.SourceFile;
+      return cont.tramsformFile(file);
     };
   };
 }
