@@ -21,7 +21,7 @@ export class TransformContext {
 
   constructor(
     public context: ts.TransformationContext,
-    public config: TransformerConfig
+    public config: TransformerConfig,
   ) {
     this.factory = context.factory;
   }
@@ -34,40 +34,39 @@ export class TransformContext {
     return ts.visitEachChild(
       node,
       (nextnode) => visitNode(this, nextnode),
-      this.context
+      this.context,
     );
   }
 
-  private transformStatementList(
-		statements: NodeArray<ts.Statement>,
-	) {
-		const result: ts.Statement[] = [];
+  private transformStatementList(statements: NodeArray<ts.Statement>) {
+    const result: ts.Statement[] = [];
 
-		statements.forEach((statement) => {
-			const newNode = visitNode(this, statement) as ts.Statement;
+    statements.forEach((statement) => {
+      const newNode = visitNode(this, statement) as ts.Statement;
       result.push(newNode);
-		});
+    });
 
-		return result;
-	}
+    return result;
+  }
 
   tramsformFile(file: ts.SourceFile) {
-    const newStatements =  this.transformStatementList(file.statements);
+    const newStatements = this.transformStatementList(file.statements);
 
-    return this.factory.updateSourceFile(file, 
-      newStatements, 
-      file.isDeclarationFile, 
-      file.referencedFiles, 
-      file.typeReferenceDirectives, 
-      file.hasNoDefaultLib, 
-      file.libReferenceDirectives
+    return this.factory.updateSourceFile(
+      file,
+      newStatements,
+      file.isDeclarationFile,
+      file.referencedFiles,
+      file.typeReferenceDirectives,
+      file.hasNoDefaultLib,
+      file.libReferenceDirectives,
     );
   }
 }
 
 function visitImportDeclaration(
   context: TransformContext,
-  node: ts.ImportDeclaration
+  node: ts.ImportDeclaration,
 ) {
   const { factory } = context;
 
@@ -93,10 +92,10 @@ function visitImportDeclaration(
       factory.createImportClause(
         false,
         undefined,
-        factory.createNamedImports([])
+        factory.createNamedImports([]),
       ),
       node.moduleSpecifier,
-      undefined
+      undefined,
     ),
 
     // Creates a multi-variable statement as shown below.
@@ -119,22 +118,22 @@ function visitImportDeclaration(
             factory.createCallExpression(
               factory.createPropertyAccessExpression(
                 factory.createIdentifier("game"),
-                "GetService"
+                "GetService",
               ),
               undefined,
-              [factory.createStringLiteral(serviceName)]
-            )
+              [factory.createStringLiteral(serviceName)],
+            ),
           );
         }),
-        ts.NodeFlags.Const
-      )
+        ts.NodeFlags.Const,
+      ),
     ),
   ];
 }
 
 function visitStatement(
   context: TransformContext,
-  node: ts.Statement
+  node: ts.Statement,
 ): ts.Statement | ts.Statement[] {
   // This is used to transform statements.
   // TypeScript allows you to return multiple statements here.
@@ -151,21 +150,21 @@ function visitStatement(
 
 function visitCallExpression(
   context: TransformContext,
-  node: ts.CallExpression
-) {
+  node: ts.CallExpression,
+): ts.Node | ts.Node[] {
   const identifier = node.expression;
   if (!ts.isIdentifier(identifier)) return context.transform(node);
   if (identifier.escapedText !== "$myMacro") return context.transform(node);
 
   const argument = node.arguments[0];
-  if (!argument) return;
+  if (!argument) return context.transform(node); // Return the original node if no argument
 
   return argument;
 }
 
 function visitNode(
   context: TransformContext,
-  node: ts.Node
+  node: ts.Node,
 ): ts.Node | ts.Node[] {
   console.log(node.kind, `\t# ts.SyntaxKind.${ts.SyntaxKind[node.kind]}`);
   if (ts.isStatement(node)) {
