@@ -10,7 +10,7 @@
     "url": "https://github.com/FireTS/rbxts-transformer-services.git"
   },
   "dependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "~5.5.2"
   },
   "scripts": {
     "prepare": "pnpm run build",
